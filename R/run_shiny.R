@@ -2,14 +2,13 @@
 # MLE IRT
 ##########################################################################################
 #' @title MLE IRT
-#' @import 
+#' @import shiny shinydashboard
 #' @keywords mle irt
 #' @export
 #' @examples
 #' mle_irt()
 mle_irt<-function(){
-  ui<-tagList(tags$head(includeHTML(("google-analytics.html"))),
-              navbarPage("MLE EAP MAP using IRTDemo",# titlePanel(h4("by Metin Bulus")),
+  ui<-tagList(navbarPage("MLE EAP MAP using IRTDemo",# titlePanel(h4("by Metin Bulus")),
                          ##########################################################################################
                          # MLE PERSON LOCATION GIVEN ITEM DIFFICULTY RACH
                          ##########################################################################################
@@ -19,7 +18,7 @@ mle_irt<-function(){
                                                sliderInput("t_0_plid",label="Starting Value",min=-2,max=2,value=0,step=0.5),
                                                sliderInput("iter_plid",label="Iteration",min=1,max=5,value=1,step=1),
                                                strong("Note:"),
-                                               p("Respondent's raw score are assumed to come from following patterns: 
+                                               p("Respondent's raw score are assumed to come from following patterns:
                                                 r=0,p=00000;r=1,p=10000;r=2,p=11000;
                                                 r=3,p=11100;r=4,p=11110;r=5,p=11111."),
                                                p("Item difficulties for five item instrument are assumed to be known (-1.90,-0.60,-0.25,0.30,0.45) and are provided in de Ayala (2009,p.22)."),
@@ -127,9 +126,9 @@ mle_irt<-function(){
     #   xy_idd2pl <- xy_idd2pl()
     #   logLike_idd2pl <- logLike_idd2pl()
     #   plot_ly(
-    #     x=alphas_idd2pl, 
-    #     y=deltas_idd2pl, 
-    #     z=logLike_idd2pl, 
+    #     x=alphas_idd2pl,
+    #     y=deltas_idd2pl,
+    #     z=logLike_idd2pl,
     #     type="surface",
     #     colors=colorRamp(c("#347AB6")),
     #     opacity=0.8) %>%
@@ -433,7 +432,7 @@ mle_irt<-function(){
         graphics::plot(t,ll,type='l',xlab=expression(theta),ylab='LogLikelihood',xlim=c(-6,6),ylim=c(-15,1))
         abline(h=0,col=8)
         spline<-smooth.spline(ll ~ t)
-        lines(spline,col='black') 
+        lines(spline,col='black')
         fderiv0<-predict(spline,x=t_0,deriv=0)
         fderiv1<-predict(spline,x=t_0,deriv=1)
         fderiv2<-predict(spline,x=t_0,deriv=2)
@@ -518,7 +517,7 @@ mle_irt<-function(){
       Xr<-Xr()
       AXr<-AXr()
       LXr<-LXr()
-      graphics::plot(Xr,5*AXr*LXr,type='l',xlab=expression(X[r]),ylab=expression(f(X[r])),ylim=c(0,0.20),xlim=c(-4,4),main=expression(paste("Prior,Likelihood,and Posterior Distributions")),sub=expression(paste("Note: Posterior distribution is rescaled for comperability!")))       
+      graphics::plot(Xr,5*AXr*LXr,type='l',xlab=expression(X[r]),ylab=expression(f(X[r])),ylim=c(0,0.20),xlim=c(-4,4),main=expression(paste("Prior,Likelihood,and Posterior Distributions")),sub=expression(paste("Note: Posterior distribution is rescaled for comperability!")))
       lines(Xr,LXr,type='l',col="blue")
       lines(Xr,AXr,type='l',col="red")
       EAP<-sum(Xr*AXr*LXr)/sum(AXr*LXr)
