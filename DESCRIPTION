@@ -1,5 +1,5 @@
-Package: modelsirt
-Title: IRT curves with shinyapps
+Package: mleirt
+Title: IRT MLE with shinyapps
 Version: 0.0.0.9000
 Authors@R: person("Dimitrios", "Zacharatos", , email = "dzacharatos@yahoo.com", role = c("aut", "cre"))
 Author: Dimitrios Zacharatos [aut,cre]

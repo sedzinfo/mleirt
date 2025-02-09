@@ -10,9 +10,10 @@ setwd(paste0(gsub("generate_package.R","",rstudioapi::getActiveDocumentContext()
 # usethis::create_package("melirt")
 # usethis::use_data_raw(name='data/mfi.rda')
 # file.create("R/data.R")
-rm(list=c("mel_irt"))
+rm(list=c("melirt"))
 document()
 install()
-mle_irt()
+library(mleirt)
+mleirt()
 
 

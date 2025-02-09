@@ -6,8 +6,69 @@
 #' @keywords mle irt
 #' @export
 #' @examples
-#' mle_irt()
-mle_irt<-function(){
+#' mleirt()
+mleirt<-function(){
+  library(shiny)
+  library(shinydashboard)
+  library(htmltools)
+  ##########################################################################################
+  # MLE ITEM DISCRIMINATION DIFFICULTY 2PL MODEL
+  ##########################################################################################
+  N_idd2pl<-50
+  thetas_idd2pl<-seq(from=-3,to=3,length.out=N_idd2pl)
+  deltas_idd2pl<-seq(from=-3,to=3,by=0.1)
+  alphas_idd2pl<-seq(from=-3,to=3,by=0.1)
+  k_idd2pl<-length(deltas_idd2pl)
+  Pfun_idd2pl<-function(theta,alpha,delta,D=1,u=1){
+    z=D*alpha*(theta-delta)
+    P=exp(u*z)/(1+exp(z))
+    return(P)
+  }
+  ##########################################################################################
+  # MLE ITEM GUESSING DISCRIMINATION DIFFICULTY 3PL MODEL
+  ##########################################################################################
+  N_igdd3pl<-50
+  guesses_igdd3pl<-seq(from=0.05,to=0.6,by=0.05)
+  thetas_igdd3pl<-seq(from=-3,to=3,length.out=N_igdd3pl)
+  deltas_igdd3pl<-seq(from=-3,to=3,by=0.15)
+  alphas_igdd3pl<-seq(from=-3,to=3,by=0.15)
+  k_igdd3pl<-length(deltas_igdd3pl)
+  Pfun_igdd3pl<-function(guess,theta,alpha,delta,D=1,u=1){
+    z=D*alpha*(theta-delta)
+    P=guess+((1-guess)* exp(z)/(1+exp(z)))
+    if(u==1){return(P)}
+    if(u==0){return(1-P)}
+  }
+  pik_igdd3pl<-array(NA,dim=c(k_igdd3pl,k_igdd3pl,N_igdd3pl))
+  logLike_igdd3pl<-matrix(NA,k_igdd3pl,k_igdd3pl)
+  ##########################################################################################
+  # MLE PERSON LOCATION GIVEN ITEM DIFFICULTY RACH
+  ##########################################################################################
+  Pfun_plid<-function(theta,delta,D=1,u=1){
+    z=D*(theta-delta)
+    P=exp(u*z)/(1 + exp(z))
+    return(P)
+  }
+  deltas_plid<-c(-1.90,-0.60,-0.25,0.30,0.45)
+  thetas_plid<-seq(from=-6,to=6,by=0.001)
+  N_plid<-length(thetas_plid)
+  n_plid<-length(deltas_plid)
+  pji_plid<-matrix(NA,N_plid,n_plid)
+  logLike_plid<-matrix(NA,N_plid,3)
+  colnames(logLike_plid)<-c("thetas","LogLike","Like")
+  ##########################################################################################
+  # EAP MAP PERSON ABILITY ESTIMATION IN RACH MODEL
+  ##########################################################################################
+  # define probability or likelihood function for 2PL model
+  PLfun_eapmappae<-function(theta,alpha,delta,D=1,u=1){
+    z=D*alpha*(theta-delta)
+    P=exp(u*z)/(1+exp(z))
+    return(P)
+  }
+  alphas_eapmappae<-c(1,1,1,1,1) # discriminations
+  deltas_eapmappae<-c(-2.155,-.245,.206,.984,1.211) # de Ayala difficulty estimates (Table 4.4)
+  n_eapmappae<-length(deltas_eapmappae)
+  
   ui<-tagList(navbarPage("MLE EAP MAP using IRTDemo",# titlePanel(h4("by Metin Bulus")),
                          ##########################################################################################
                          # MLE PERSON LOCATION GIVEN ITEM DIFFICULTY RACH
@@ -527,5 +588,5 @@ mle_irt<-function(){
       abline(v=EAP,col="black",lty=2)
       legend(legend=c("Prior","Likelihood","Posterior"),col=c("red","blue","black"),lty=1,title="Distribution","right")})
   }
-  shiny::shinyApp(ui=source("ui.R"),server=server)
+  shiny::shinyApp(ui=ui,server=server)
 }
