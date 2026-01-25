@@ -102,8 +102,8 @@ GPL (>= 2)
 
 ## References
 
-- de Ayala, R. J. (2009). *The Theory and Practice of Item Response Theory*. Guilford Press.
 - Bulus, M., & Bonifay, W. (2022). irtDemo R Package: Pedagogical Interactive Web Applications for Estimation, Scoring, and Multi Dimensionality in Item Response Theory. Anadolu University Journal of Education Faculty, 6(1), 92-108. https://doi.org/10.34056/aujef.913781
+- de Ayala, R. J. (2009). *The Theory and Practice of Item Response Theory*. Guilford Press.
 
 ## Contact
 
@@ -114,3 +114,4 @@ For questions, issues, or contributions, please contact:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
