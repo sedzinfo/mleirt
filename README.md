@@ -115,3 +115,14 @@ For questions, issues, or contributions, please contact:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+
+![Stars](https://img.shields.io/github/stars/sedzinfo/mleirt)
+![Watchers](https://img.shields.io/github/watchers/sedzinfo/mleirt)
+![Repo Size](https://img.shields.io/github/repo-size/sedzinfo/mleirt)
+![Open Issues](https://img.shields.io/github/issues/sedzinfo/mleirt)
+![Forks](https://img.shields.io/github/forks/sedzinfo/mleirt)
+![Last Commit](https://img.shields.io/github/last-commit/sedzinfo/mleirt)
+![Contributors](https://img.shields.io/github/contributors/sedzinfo/mleirt)
+![License](https://img.shields.io/github/license/sedzinfo/mleirt)
+![Release](https://img.shields.io/github/v/release/sedzinfo/mleirt)
+![Workflow Status](https://img.shields.io/github/actions/workflow/status/sedzinfo/mleirt/main.yml)
