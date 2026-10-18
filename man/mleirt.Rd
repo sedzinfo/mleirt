@@ -10,7 +10,7 @@ mleirt()
 MLE IRT
 }
 \examples{
-mleirt()
+if (interactive()) mleirt()
 }
 \keyword{irt}
 \keyword{mle}

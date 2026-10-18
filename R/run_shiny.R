@@ -6,7 +6,7 @@
 #' @keywords mle irt
 #' @export
 #' @examples
-#' mleirt()
+#' if (interactive()) mleirt()
 mleirt<-function(){
   library(shiny)
   library(shinydashboard)
