@@ -124,5 +124,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ![Last Commit](https://img.shields.io/github/last-commit/sedzinfo/mleirt)
 ![Contributors](https://img.shields.io/github/contributors/sedzinfo/mleirt)
 ![License](https://img.shields.io/github/license/sedzinfo/mleirt)
-![Release](https://img.shields.io/github/v/release/sedzinfo/mleirt)
-![Workflow Status](https://img.shields.io/github/actions/workflow/status/sedzinfo/mleirt/main.yml)
+![Workflow Status](https://img.shields.io/github/actions/workflow/status/sedzinfo/mleirt/build-tarball.yml)
