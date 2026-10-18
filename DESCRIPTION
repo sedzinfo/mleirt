@@ -8,7 +8,7 @@ Author: Dimitrios Zacharatos [aut,cre]
 Maintainer: Dimitrios Zacharatos <dzacharatos@yahoo.com>
 Depends: shiny
 Description: IRT curves with shinyapps.
-License: GPL (>= 2) + file LICENSE
+License: GPL-3
 URL: https://sedzinfo.github.io/mleirt/, https://github.com/sedzinfo/mleirt
 BugReports: https://github.com/sedzinfo/mleirt/issues
 Encoding: UTF-8
