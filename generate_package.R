@@ -18,6 +18,7 @@ setwd(directory)
 # usethis::use_data_raw(name='data/mfi.rda')
 # file.create("R/data.R")
 document()
+if ("mleirt" %in% loadedNamespaces()) unloadNamespace("mleirt") # an old version still loaded would make the reinstalled one look corrupt
 if ("mleirt" %in% rownames(installed.packages())) remove.packages("mleirt")
 install()
 library(mleirt)
