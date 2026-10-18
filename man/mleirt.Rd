@@ -32,10 +32,6 @@ the responses given, and the log-likelihood is its logarithm.
 
 The app has four tabs, described in the sections below.
 }
-\note{
-The app is built on the IRTDemo collection of Shiny apps: the 3PL tab credits Metin
-  Bulus, and the EAP-MAP tab Metin Bulus and Wes Bonifay.
-}
 \section{MLE Rasch}{
 
 How the Newton-Raphson method finds the maximum likelihood estimate of a person's ability
@@ -127,12 +123,26 @@ towards the prior mean, more quadrature points make both estimates more precise,
 unlike the maximum likelihood estimate, EAP and MAP stay finite for raw scores of 0 and 5.
 }
 
+\section{Acknowledgments}{
+
+The plots in this app were originally developed by Metin Bulus and Wes Bonifay for the
+irtDemo package (Bulus and Bonifay, 2022), available on CRAN at
+\url{https://cran.r-project.org/package=irtDemo}, and the app keeps their credits on the
+3PL tab (Metin Bulus) and the EAP-MAP tab (Metin Bulus and Wes Bonifay). Dimitrios
+Zacharatos adapted them into this package.
+}
+
 \examples{
 if (interactive()) mleirt()
 }
 \references{
-de Ayala, R. J. (2009). \emph{The Theory and Practice of Item Response Theory}.
-  New York: Guilford Press.
+Bulus, M., and Bonifay, W. (2022). irtDemo R Package: Pedagogical Interactive
+  Web Applications for Estimation, Scoring, and Multi Dimensionality in Item Response
+  Theory. \emph{Anadolu University Journal of Education Faculty}, 6(1), 92-108.
+  \doi{10.34056/aujef.913781}
+
+  de Ayala, R. J. (2009). \emph{The Theory and Practice of Item Response Theory}. New York:
+  Guilford Press.
 }
 \keyword{irt}
 \keyword{mle}
