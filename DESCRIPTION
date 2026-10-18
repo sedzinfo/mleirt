@@ -9,6 +9,8 @@ Maintainer: Dimitrios Zacharatos <dzacharatos@yahoo.com>
 Depends: shiny
 Description: IRT curves with shinyapps.
 License: GPL (>= 2) + file LICENSE
+URL: https://sedzinfo.github.io/mleirt/, https://github.com/sedzinfo/mleirt
+BugReports: https://github.com/sedzinfo/mleirt/issues
 Encoding: UTF-8
 LazyData: true
 Config/roxygen2/version: 8.1.0
