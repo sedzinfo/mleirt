@@ -1,7 +1,119 @@
 ##########################################################################################
 # MLE IRT
 ##########################################################################################
-#' @title MLE IRT
+#' @title Explore maximum likelihood, EAP and MAP estimation in item response theory
+#' @description Launches a Shiny app that shows, with interactive plots, how the estimates
+#' of item response theory (IRT) are found: a person's ability by maximum likelihood with the
+#' Newton-Raphson method (Rasch model), an item's discrimination and difficulty by maximum
+#' likelihood (two- and three-parameter logistic models), and a person's ability by Bayesian
+#' expected a posteriori (EAP) and maximum a posteriori (MAP) estimation. The examples follow
+#' de Ayala (2009), and the default settings reproduce his published results.
+#' @details All tabs use the logistic item response function
+#' \deqn{P(u = 1 \mid \theta) = c + (1 - c) \frac{\exp(\alpha(\theta - \delta))}{1 + \exp(\alpha(\theta - \delta))}}{P(u = 1 | theta) = c + (1 - c) * exp(alpha * (theta - delta)) / (1 + exp(alpha * (theta - delta)))}
+#' the probability that a person of ability \eqn{\theta}{theta} answers an item correctly,
+#' where \eqn{\delta}{delta} is the item's difficulty, \eqn{\alpha}{alpha} its discrimination
+#' and \eqn{c} its guessing parameter. The Rasch model fixes \eqn{\alpha = 1}{alpha = 1} and
+#' \eqn{c = 0}, the two-parameter logistic model (2PL) fixes \eqn{c = 0}, and the
+#' three-parameter logistic model (3PL) estimates all three. No scaling constant is used
+#' (\eqn{D = 1}). The likelihood of a set of responses is the product of the probabilities of
+#' the responses given, and the log-likelihood is its logarithm.
+#'
+#' The app has four tabs, described in the sections below.
+#' @section MLE Rasch:
+#' How the Newton-Raphson method finds the maximum likelihood estimate of a person's ability
+#' when the item difficulties are known. The test has five items with difficulties -1.90,
+#' -0.60, -0.25, 0.30 and 0.45 (de Ayala, 2009, p. 22), and a raw score \eqn{r} is taken to
+#' come from answering the first \eqn{r} items correctly: \eqn{r = 0} is the response pattern
+#' 00000, \eqn{r = 2} is 11000 and \eqn{r = 5} is 11111.
+#' \itemize{
+#'   \item \strong{Controls:} the raw score, the starting value of the estimate (-2 to 2) and
+#'     the iteration to show (1 to 5).
+#'   \item \strong{Plot:} the log-likelihood of the response pattern for abilities from -6 to
+#'     6. For the chosen iteration it shows the estimate the step starts from (red dot), the
+#'     tangent to the log-likelihood there (blue line) and the estimate the step ends at (green
+#'     dot), given by
+#'     \eqn{\theta_1 = \theta_0 - LL'(\theta_0) / LL''(\theta_0)}{theta1 = theta0 - LL'(theta0) / LL''(theta0)},
+#'     with the derivatives taken from a smoothing spline of the log-likelihood. The shaded
+#'     triangle shows the angle between the tangent and the horizontal axis, which is zero at
+#'     the maximum.
+#'   \item \strong{Text:} the numbers of the Newton-Raphson step and the angle.
+#' }
+#' Raising the iteration shows the estimates converging on the maximum of the curve, which
+#' reproduces the person locations of de Ayala (2009, Table 2.2, p. 28). For raw scores of 0
+#' and 5 the log-likelihood keeps rising towards minus or plus infinity, so it has no maximum
+#' and the steps move away: the maximum likelihood estimate does not exist for zero or perfect
+#' scores.
+#' @section MLE 2PL:
+#' The log-likelihood surface of an item's discrimination and difficulty under the 2PL, and
+#' where its maximum lies. The app simulates the responses of 50 people, whose abilities are
+#' known and spread evenly from -3 to 3, to one item with the true discrimination and
+#' difficulty set on the sliders, and draws new responses whenever a true value changes.
+#' \itemize{
+#'   \item \strong{Controls:} the true discrimination and difficulty (-3 to 3), and two
+#'     sliders that rotate the plot.
+#'   \item \strong{Plot:} the log-likelihood of the simulated responses for every combination
+#'     of discrimination and difficulty from -3 to 3 in steps of 0.1, as a 3-D surface. The red
+#'     dot marks its highest point: the maximum likelihood estimates of the two parameters.
+#'     With only 50 responses they differ from the true values by sampling error, and they
+#'     change with every new draw.
+#' }
+#' @section MLE 3PL:
+#' The same for the 3PL, to show how the guessing parameter affects the estimation. The app
+#' simulates the responses of the same 50 people from the true guessing, discrimination and
+#' difficulty set on the sliders, then computes the log-likelihood surface of discrimination
+#' and difficulty (-3 to 3 in steps of 0.15) for each of twelve assumed guessing values, 0.05,
+#' 0.10, ..., 0.60.
+#' \itemize{
+#'   \item \strong{Controls:} the true guessing (0.05 to 0.60), discrimination and difficulty,
+#'     and two sliders that rotate the plot.
+#'   \item \strong{Plot:} the twelve surfaces drawn over each other in different colours,
+#'     each with a dot at its highest point; the legend gives the guessing value of each
+#'     colour. Each surface is drawn on its own vertical scale, so compare where the maxima lie
+#'     rather than their heights. Computing twelve surfaces takes time, and the plot can take a
+#'     minute to appear.
+#' }
+#' @section EAP-MAP Rasch:
+#' Bayesian estimation of a person's ability under the Rasch model, by quadrature. The test
+#' has five items with difficulties fixed at -2.155, -0.245, 0.206, 0.984 and 1.211 (de Ayala,
+#' 2009, Table 4.4), and raw scores map to response patterns as in the MLE Rasch tab. With
+#' prior weights \eqn{A(X_r)} and likelihood \eqn{L(X_r)} at the quadrature points
+#' \eqn{X_r},
+#' \deqn{EAP = \frac{\sum_r X_r L(X_r) A(X_r)}{\sum_r L(X_r) A(X_r)}}{EAP = sum(X_r * L(X_r) * A(X_r)) / sum(L(X_r) * A(X_r))}
+#' is the mean of the posterior distribution, and MAP is the quadrature point where the
+#' posterior \eqn{L(X_r) A(X_r)} is highest.
+#' \itemize{
+#'   \item \strong{Controls:} the raw score; the number of quadrature points (10 to 100,
+#'     spread evenly from -4 to 4); and the mean, standard deviation and skewness of the prior,
+#'     a skew-normal distribution (\code{fGarch::dsnorm()}) that is normal when the skewness
+#'     is 1.
+#'   \item \strong{First sub-tab, four plots:} the prior weights at the quadrature points; the
+#'     item trace lines, the probability of each observed response across ability (blue for
+#'     items answered correctly, red for items answered incorrectly); the likelihood, the
+#'     product of those probabilities; and the posterior, with lines and values for the EAP
+#'     (blue) and the MAP (red).
+#'   \item \strong{Combined sub-tab:} the prior (red), likelihood (blue) and posterior (black,
+#'     rescaled to be comparable) in one plot, with dashed lines at the prior mean and the
+#'     posterior mean.
+#' }
+#' The default settings replicate de Ayala (2009, p. 79). A narrower prior pulls the EAP
+#' towards the prior mean, more quadrature points make both estimates more precise, and,
+#' unlike the maximum likelihood estimate, EAP and MAP stay finite for raw scores of 0 and 5.
+#' @section Acknowledgments:
+#' The plots in this app were originally developed by Metin Bulus and Wes Bonifay for the
+#' irtDemo package (Bulus and Bonifay, 2022), available on CRAN at
+#' \url{https://cran.r-project.org/package=irtDemo}, and the app keeps their credits on the
+#' 3PL tab (Metin Bulus) and the EAP-MAP tab (Metin Bulus and Wes Bonifay). Dimitrios
+#' Zacharatos adapted them into this package.
+#' @return A Shiny app object (\code{shiny::shinyApp()}). Printing it, which is what happens
+#'   when you call \code{mleirt()} at the console, starts the app in the browser or the
+#'   RStudio viewer; you can also pass it to \code{shiny::runApp()}.
+#' @references Bulus, M., and Bonifay, W. (2022). irtDemo R Package: Pedagogical Interactive
+#'   Web Applications for Estimation, Scoring, and Multi Dimensionality in Item Response
+#'   Theory. \emph{Anadolu University Journal of Education Faculty}, 6(1), 92-108.
+#'   \doi{10.34056/aujef.913781}
+#'
+#'   de Ayala, R. J. (2009). \emph{The Theory and Practice of Item Response Theory}. New York:
+#'   Guilford Press.
 #' @import shiny shinydashboard
 #' @keywords mle irt
 #' @export
