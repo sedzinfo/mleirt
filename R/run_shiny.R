@@ -50,7 +50,8 @@
 #' difficulty set on the sliders, and draws new responses whenever a true value changes.
 #' \itemize{
 #'   \item \strong{Controls:} the true discrimination and difficulty (-3 to 3), and two
-#'     sliders that rotate the plot.
+#'     sliders that set the viewing angle. The plot can also be rotated and zoomed with the
+#'     mouse, and hovering shows the values under the pointer.
 #'   \item \strong{Plot:} the log-likelihood of the simulated responses for every combination
 #'     of discrimination and difficulty from -3 to 3 in steps of 0.1, as a 3-D surface. The red
 #'     dot marks its highest point: the maximum likelihood estimates of the two parameters.
@@ -65,12 +66,12 @@
 #' 0.10, ..., 0.60.
 #' \itemize{
 #'   \item \strong{Controls:} the true guessing (0.05 to 0.60), discrimination and difficulty,
-#'     and two sliders that rotate the plot.
+#'     and two sliders that set the viewing angle.
 #'   \item \strong{Plot:} the twelve surfaces drawn over each other in different colours,
 #'     each with a dot at its highest point; the legend gives the guessing value of each
-#'     colour. Each surface is drawn on its own vertical scale, so compare where the maxima lie
-#'     rather than their heights. Computing twelve surfaces takes time, and the plot can take a
-#'     minute to appear.
+#'     colour, and clicking an entry hides or shows that surface. All surfaces share one
+#'     vertical scale. Computing twelve surfaces takes time, and the plot can take a minute to
+#'     appear.
 #' }
 #' @section EAP-MAP Rasch:
 #' Bayesian estimation of a person's ability under the Rasch model, by quadrature. The test
@@ -180,6 +181,19 @@ mleirt<-function(){
   alphas_eapmappae<-c(1,1,1,1,1) # discriminations
   deltas_eapmappae<-c(-2.155,-.245,.206,.984,1.211) # de Ayala difficulty estimates (Table 4.4)
   n_eapmappae<-length(deltas_eapmappae)
+  ##########################################################################################
+  # PLOTLY HELPERS
+  ##########################################################################################
+  # vertical line across the whole plot, for layout(shapes=)
+  vline<-function(x,color,dash="solid"){
+    list(type="line",x0=x,x1=x,y0=0,y1=1,yref="paper",line=list(color=color,dash=dash,width=1))
+  }
+  # camera from persp() style angles: theta azimuth, phi elevation (degrees)
+  camera<-function(theta,phi,r=2.2){
+    theta<-theta*pi/180
+    phi<-phi*pi/180
+    list(eye=list(x=r*cos(phi)*sin(theta),y=-r*cos(phi)*cos(theta),z=r*sin(phi)))
+  }
   
   ui<-tagList(navbarPage("MLE EAP MAP using IRTDemo",# titlePanel(h4("by Metin Bulus")),
                          ##########################################################################################
@@ -196,31 +210,26 @@ mleirt<-function(){
                                                 r=3,p=11100;r=4,p=11110;r=5,p=11111."),
                                                p("Item difficulties for five item instrument are assumed to be known (-1.90,-0.60,-0.25,0.30,0.45) and are provided in de Ayala (2009,p.22)."),
                                                p("This app replicates person locations in Table 2.2 in de Ayala (2009,p.28)")),
-                                  mainPanel(plotOutput(outputId="MLEIRT_plot",height="800px"),verbatimTextOutput("iterinfo"))),
+                                  mainPanel(plotly::plotlyOutput(outputId="MLEIRT_plot",height="800px"),verbatimTextOutput("iterinfo"))),
                          ##########################################################################################
                          # MLE ITEM DISCRIMINATION DIFFICULTY 2PL MODEL
                          ##########################################################################################
                          tabPanel("MLE 2PL", titlePanel(h4("by unknown contributor")),
                                   sidebarPanel(width=3,
                                                sliderInput("alpha_idd2pl",label="Discrimination",min=-3,max=3,value=1,step=0.1),
-                                               sliderInput("delta_idd2pl",label="Difficulty",min=-3,max=3,value=-0.5,step=0.1),
-                                               sliderInput("angle1_idd2pl",label="Rotate Right-Left",min=0,max=90,value=30,step=1),
-                                               sliderInput("angle2_idd2pl",label="Rotate Up-Down",min=0,max=90,value=30,step=1)
-                                  ),
+                                               sliderInput("delta_idd2pl",label="Location",min=-3,max=3,value=-0.5,step=0.1)),
                                   helpText("Values on the control panel are true values and projection of red dot corresponds to the intersection of discrimination and difficulty parameters that maximize the joint log-likelihood."),
-                                  mainPanel(plotOutput(outputId="est2PL_plot",width="100%",height="800px"))),
+                                  mainPanel(plotly::plotlyOutput(outputId="est2PL_plot",width="100%",height="800px"))),
                          ##########################################################################################
                          # MLE ITEM DISCRIMINATION DIFFICULTY 2PL MODEL
                          ##########################################################################################
                          tabPanel("MLE 3PL", titlePanel(h4("by Metin Bulus")),
                                   sidebarPanel(width=3,
-                                               sliderInput("guess_igdd3pl",label="Guessing",min=0.05,max=0.6,value=0.4,step=0.05),
+                                               sliderInput("guess_igdd3pl",label="Lower Asymptote",min=0.05,max=0.6,value=0.4,step=0.05),
                                                sliderInput("alpha_igdd3pl",label="Discrimination",min=-3,max=3,value=1,step=0.15),
-                                               sliderInput("delta_igdd3pl",label="Difficulty",min=-3,max=3,value=-0.5,step=0.15),
-                                               sliderInput("angle1_igdd3pl",label="Rotate Left-Right",min=0,max=90,value=30,step=1),
-                                               sliderInput("angle2_igdd3pl",label="Rotate Up-Down",min=0,max=90,value=30,step=1)),
+                                               sliderInput("delta_igdd3pl",label="Location",min=-3,max=3,value=-0.5,step=0.15)),
                                   helpText("Note: The graph may take a minute to appear!"),
-                                  mainPanel(plotOutput(outputId="est3PL_plot_all",width="100%",height="800px"))),
+                                  mainPanel(plotly::plotlyOutput(outputId="est3PL_plot_all",width="100%",height="800px"))),
                          ##########################################################################################
                          # EAP MAP PERSON ABILITY ESTIMATION IN RACH MODEL
                          ##########################################################################################
@@ -234,12 +243,12 @@ mleirt<-function(){
                                   helpText("Respondent's raw score are assumed to come from following patterns: r=0,patt=00000; r=1,patt=10000; r=2,patt=11000; r=3,patt=11100; r=4,patt=11110; and r=5,patt=11111."),
                                   helpText("Note: Default values replicate the analysis by de Ayala (2009,p. 79) where difficulty parameters for Item 1-5 are fixed at -2.155,-.245,.206,.984,and 1.211."),
                                   mainPanel(tabsetPanel(tabPanel("Seperate",dashboardBody(fluidRow(
-                                    column(width=6,plotOutput("Prior_plot")),
-                                    column(width=6,plotOutput("TraceLines_plot")),
-                                    column(width=6,plotOutput("Likelihood_plot")),
-                                    column(width=6,plotOutput("Posterior_plot"))))),
-                                    tabPanel("Combined",plotOutput(outputId="Combined_plot",width="100%",height="800px")))))
-              ))
+                                    column(width=6,plotly::plotlyOutput("Prior_plot")),
+                                    column(width=6,plotly::plotlyOutput("TraceLines_plot")),
+                                    column(width=6,plotly::plotlyOutput("Likelihood_plot")),
+                                    column(width=6,plotly::plotlyOutput("Posterior_plot"))))),
+                                    tabPanel("Combined",plotly::plotlyOutput(outputId="Combined_plot",width="100%",height="800px")))))
+  ))
   ##########################################################################################
   # MLE
   ##########################################################################################
@@ -276,52 +285,28 @@ mleirt<-function(){
       logLike_idd2pl<-logLike_idd2pl()
       which(logLike_idd2pl==max(logLike_idd2pl),TRUE)
     })
-    output$est2PL_plot<-renderPlot({
+    output$est2PL_plot<-plotly::renderPlotly({
       xy_idd2pl<-xy_idd2pl()
       logLike_idd2pl<-logLike_idd2pl()
-      logLike3D<- graphics::persp(alphas_idd2pl,
-                                  deltas_idd2pl,
-                                  logLike_idd2pl,
-                                  theta=input$angle1_idd2pl,
-                                  phi=input$angle2_idd2pl,
-                                  col="#347AB6",
-                                  xlab="Discrimination",
-                                  ylab="Difficulty",
-                                  zlab="Log-Likelihood")
-      points(trans3d(alphas_idd2pl[xy_idd2pl[1,1]],
-                     deltas_idd2pl[xy_idd2pl[1,2]],
-                     logLike_idd2pl[xy_idd2pl[1,1],
-                                    xy_idd2pl[1,2]],
-                     logLike3D),
-             col='black',cex=1.5,pch=21,bg="red")
+      # surface z is indexed [y,x], so transpose the [alpha,delta] matrix
+      plotly::plot_ly() |>
+        plotly::add_surface(x=alphas_idd2pl,
+                            y=deltas_idd2pl,
+                            z=t(logLike_idd2pl),
+                            colorscale=list(c(0,1),c("#347AB6","#347AB6")),
+                            showscale=FALSE,
+                            hovertemplate="Discrimination: %{x:.2f}<br>Difficulty: %{y:.2f}<br>Log-Likelihood: %{z:.3f}<extra></extra>") |>
+        plotly::add_trace(type="scatter3d",mode="markers",
+                          x=alphas_idd2pl[xy_idd2pl[1,1]],
+                          y=deltas_idd2pl[xy_idd2pl[1,2]],
+                          z=logLike_idd2pl[xy_idd2pl[1,1],xy_idd2pl[1,2]],
+                          marker=list(color="red",size=7,line=list(color="black",width=1)),
+                          hovertemplate="Maximum<br>Discrimination: %{x:.2f}<br>Difficulty: %{y:.2f}<br>Log-Likelihood: %{z:.3f}<extra></extra>") |>
+        plotly::layout(showlegend=FALSE,
+                       scene=list(xaxis=list(title="Discrimination"),
+                                  yaxis=list(title="Difficulty"),
+                                  zaxis=list(title="Log-Likelihood")))
     })
-    # output$est2PL_plot <- renderPlotly({
-    #   xy_idd2pl <- xy_idd2pl()
-    #   logLike_idd2pl <- logLike_idd2pl()
-    #   plot_ly(
-    #     x=alphas_idd2pl,
-    #     y=deltas_idd2pl,
-    #     z=logLike_idd2pl,
-    #     type="surface",
-    #     colors=colorRamp(c("#347AB6")),
-    #     opacity=0.8) %>%
-    #     layout(
-    #       scene=list(
-    #         xaxis=list(title="Discrimination"),
-    #         yaxis=list(title="Difficulty"),
-    #         zaxis=list(title="Log-Likelihood"),
-    #         camera=list(eye=list(x=input$angle1_idd2pl,
-    #                              y=input$angle2_idd2pl,
-    #                              z=1))))%>%
-    #     add_trace(
-    #       x=alphas_idd2pl[xy_idd2pl[1,1]],
-    #       y=deltas_idd2pl[xy_idd2pl[1,2]],
-    #       z=logLike_idd2pl[xy_idd2pl[1,1],xy_idd2pl[1,2]],
-    #       type="scatter3d",
-    #       mode="markers",
-    #       marker=list(color="red",size=20,symbol="circle")
-    #     )
-    # })
     ##########################################################################################
     # MLE ITEM GUESSING DISCRIMINATION DIFFICULTY 3PL MODEL
     ##########################################################################################
@@ -530,62 +515,40 @@ mleirt<-function(){
       logLike12<-logLike12()
       which(logLike12==max(logLike12),TRUE)
     })
-    output$est3PL_plot_all<-renderPlot({
-      xy1<-xy1()
-      logLike1<-logLike1()
-      xy2<-xy2()
-      logLike2<-logLike2()
-      xy3<-xy3()
-      logLike3<-logLike3()
-      xy4<-xy4()
-      logLike4<-logLike4()
-      xy5<-xy5()
-      logLike5<-logLike5()
-      xy6<-xy6()
-      logLike6<-logLike6()
-      xy7<-xy7()
-      logLike7<-logLike7()
-      xy8<-xy8()
-      logLike8<-logLike8()
-      xy9<-xy9()
-      logLike9<-logLike9()
-      xy10<-xy10()
-      logLike10<-logLike10()
-      xy11<-xy11()
-      logLike11<-logLike11()
-      xy12<-xy12()
-      logLike12<-logLike12()
-      logLike3D1<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike1,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,ltheta=120,shade=0.75,col=2,xlab="Discrimination",ylab="Difficulty",zlab="Log-Likelihood");par(new=TRUE)
-      logLike3D2<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike2,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=3,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D3<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike3,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=4,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D4<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike4,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=5,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D5<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike5,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=6,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D6<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike6,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=7,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D7<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike7,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=8,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D8<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike8,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=9,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D9<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike9,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=10,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D10<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike10,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=11,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D11<- graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike11,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=12,xlab="",ylab="",zlab="");par(new=TRUE)
-      logLike3D12<-graphics::persp(alphas_igdd3pl,deltas_igdd3pl,logLike12,ltheta=120,shade=0.75,theta=input$angle1_igdd3pl,phi=input$angle2_igdd3pl,col=13,xlab="",ylab="",zlab="")
-      maxLL<-max(logLike1[xy1[1,1],xy1[1,2]],logLike2[xy2[1,1],xy2[1,2]],logLike3[xy3[1,1],xy3[1,2]],logLike4[xy4[1,1],xy4[1,2]],logLike5[xy5[1,1],xy3[1,2]],logLike6[xy6[1,1],xy1[1,2]],logLike7[xy7[1,1],xy2[1,2]],logLike8[xy8[1,1],xy3[1,2]],logLike9[xy9[1,1],xy4[1,2]],logLike10[xy7[1,1],xy2[1,2]],logLike11[xy8[1,1],xy3[1,2]],logLike12[xy9[1,1],xy4[1,2]])
-      points(trans3d(alphas_igdd3pl[xy1[1,1]],deltas_igdd3pl[xy1[1,2]],logLike1[xy1[1,1],xy1[1,2]],logLike3D1),col='black',pch=21,bg=2,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy2[1,1]],deltas_igdd3pl[xy2[1,2]],logLike2[xy2[1,1],xy2[1,2]],logLike3D2),col='black',pch=21,bg=3,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy3[1,1]],deltas_igdd3pl[xy3[1,2]],logLike3[xy3[1,1],xy3[1,2]],logLike3D3),col='black',pch=21,bg=4,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy4[1,1]],deltas_igdd3pl[xy4[1,2]],logLike4[xy4[1,1],xy4[1,2]],logLike3D4),col='black',pch=21,bg=5,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy5[1,1]],deltas_igdd3pl[xy5[1,2]],logLike5[xy5[1,1],xy3[1,2]],logLike3D5),col='black',pch=21,bg=6,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy6[1,1]],deltas_igdd3pl[xy6[1,2]],logLike6[xy6[1,1],xy1[1,2]],logLike3D6),col='black',pch=21,bg=7,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy7[1,1]],deltas_igdd3pl[xy7[1,2]],logLike7[xy7[1,1],xy2[1,2]],logLike3D7),col='black',pch=21,bg=8,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy8[1,1]],deltas_igdd3pl[xy8[1,2]],logLike8[xy8[1,1],xy3[1,2]],logLike3D8),col='black',pch=21,bg=9,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy9[1,1]],deltas_igdd3pl[xy9[1,2]],logLike9[xy9[1,1],xy4[1,2]],logLike3D9),col='black',pch=21,bg=10,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy10[1,1]],deltas_igdd3pl[xy10[1,2]],logLike10[xy10[1,1],xy3[1,2]],logLike3D10),col='black',pch=21,bg=11,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy11[1,1]],deltas_igdd3pl[xy11[1,2]],logLike11[xy11[1,1],xy1[1,2]],logLike3D11),col='black',pch=21,bg=12,cex=1.5)
-      points(trans3d(alphas_igdd3pl[xy12[1,1]],deltas_igdd3pl[xy12[1,2]],logLike12[xy12[1,1],xy2[1,2]],logLike3D12),col='black',pch=21,bg=13,cex=1.5)
-      legend(legend=paste("c=",seq(0.05,.60,.05),sep=""),col=2:13,pch=19,title="Guessing","right")
+    output$est3PL_plot_all<-plotly::renderPlotly({
+      logLikes<-list(logLike1(),logLike2(),logLike3(),logLike4(),logLike5(),logLike6(),
+                     logLike7(),logLike8(),logLike9(),logLike10(),logLike11(),logLike12())
+      xys<-list(xy1(),xy2(),xy3(),xy4(),xy5(),xy6(),xy7(),xy8(),xy9(),xy10(),xy11(),xy12())
+      colours<-grDevices::hcl.colors(length(guesses_igdd3pl),palette="Dark 3")
+      p<-plotly::plot_ly()
+      for(g in seq_along(guesses_igdd3pl)){
+        group<-paste("c=",guesses_igdd3pl[g],sep="")
+        xy<-xys[[g]]
+        # surface and its maximum share a legend group, so the legend toggles both
+        p<-p |>
+          plotly::add_surface(x=alphas_igdd3pl,y=deltas_igdd3pl,z=t(logLikes[[g]]),
+                              colorscale=list(c(0,1),c(colours[g],colours[g])),
+                              showscale=FALSE,opacity=0.7,
+                              name=group,legendgroup=group,showlegend=FALSE,
+                              hovertemplate=paste(group,"<br>Discrimination: %{x:.2f}<br>Difficulty: %{y:.2f}<br>Log-Likelihood: %{z:.3f}<extra></extra>",sep="")) |>
+          plotly::add_trace(type="scatter3d",mode="markers",
+                            x=alphas_igdd3pl[xy[1,1]],
+                            y=deltas_igdd3pl[xy[1,2]],
+                            z=logLikes[[g]][xy[1,1],xy[1,2]],
+                            marker=list(color=colours[g],size=6,line=list(color="black",width=1)),
+                            name=group,legendgroup=group,
+                            hovertemplate=paste(group," maximum<br>Discrimination: %{x:.2f}<br>Difficulty: %{y:.2f}<br>Log-Likelihood: %{z:.3f}<extra></extra>",sep=""))
+      }
+      p |>
+        plotly::layout(legend=list(title=list(text="Guessing")),
+                       scene=list(xaxis=list(title="Discrimination"),
+                                  yaxis=list(title="Difficulty"),
+                                  zaxis=list(title="Log-Likelihood")))
     })
     ##########################################################################################
     # MLE PERSON LOCATION GIVEN ITEM DIFFICULTY RACH
     ##########################################################################################
-    output$MLEIRT_plot<-renderPlot({
+    nr_plid<-reactive({
       patt<-c(rep(1,input$r_plid),rep(0,5-input$r_plid))
       logLike_plid[,1]<-thetas_plid
       for (j in 1:N_plid) {
@@ -596,39 +559,57 @@ mleirt<-function(){
         logLike_plid[j,2]<-sum(log(pji_plid[j,]))
         logLike_plid[j,3]<-prod(pji_plid[j,])
       }
-      thetahat<-logLike_plid[logLike_plid[,2]==max(logLike_plid[,2]),1]
-      maxLL<-logLike_plid[logLike_plid[,2]==max(logLike_plid[,2]),2]
       t<-logLike_plid[,1]
       ll<-logLike_plid[,2]
+      spline<-smooth.spline(ll ~ t)
       t_0<-input$t_0_plid
+      # only the last iteration is shown, as in the original plot
       for(i in 1:input$iter_plid){
-        graphics::plot(t,ll,type='l',xlab=expression(theta),ylab='LogLikelihood',xlim=c(-6,6),ylim=c(-15,1))
-        abline(h=0,col=8)
-        spline<-smooth.spline(ll ~ t)
-        lines(spline,col='black')
         fderiv0<-predict(spline,x=t_0,deriv=0)
         fderiv1<-predict(spline,x=t_0,deriv=1)
         fderiv2<-predict(spline,x=t_0,deriv=2)
-        points(fderiv0,col='black',pch=21,bg="red",cex=1.5) # point to predict tangent
-        text(fderiv0$x,fderiv0$y-1,expression(hat(theta)^0))
         t_1<-t_0-(fderiv1$y/fderiv2$y)
-        theta0<-t_0
-        output$iterinfo<-renderText({
-          paste(sep="","Newton-Raphson step:","\n","theta1=theta0-(LL' / LL'')","\n",round(t_1,4),"=",round(theta0,4),"-","(",round(fderiv1$y,4)," / ",round(fderiv2$y,4),")","\n","\n","Acute angle with abscissa=",round(deg,digits=0)," degrees")
-        })
         yint<-fderiv0$y-(fderiv1$y*t_0)
         xint<--yint/fderiv1$y
-        lines(t,yint + fderiv1$y*t,col='blue') # tangent (1st deriv. of spline at t_0)
         rad<-atan(fderiv0$y/(xint-t_0))
         deg<-rad*180/pi
-        if(round(abs(deg),digits=0)>0){polygon(x=c(xint,t_0,t_0),y=c(0,0,fderiv0$y),density=c(30))}
         y_1<-predict(spline,x=t_1,deriv=0)
-        points(t_1,y_1$y,col='black',pch=21,bg="green",cex=1.5)
-        text(t_1,y_1$y-1,expression(hat(theta)^1))
-        abline(v=t_0,col=8,lty='dotted')
-        abline(v=t_1,col=8,lty='dotted')
+        step<-list(t_0=t_0,t_1=t_1,y_0=fderiv0$y,y_1=y_1$y,d1=fderiv1$y,d2=fderiv2$y,yint=yint,xint=xint,deg=deg)
         t_0<-t_1
       }
+      list(t=t,ll=ll,step=step)
+    })
+    output$MLEIRT_plot<-plotly::renderPlotly({
+      nr<-nr_plid()
+      s<-nr$step
+      hat0<-"θ̂<sup>0</sup>"
+      hat1<-"θ̂<sup>1</sup>"
+      p<-plotly::plot_ly() |>
+        plotly::add_lines(x=nr$t,y=nr$ll,line=list(color="black"),name="Log-likelihood",
+                          hovertemplate="θ: %{x:.3f}<br>LogLikelihood: %{y:.4f}<extra></extra>") |>
+        plotly::add_lines(x=c(-6,6),y=s$yint+s$d1*c(-6,6),line=list(color="blue"),name="Tangent",hoverinfo="skip")
+      if(round(abs(s$deg),digits=0)>0){
+        p<-p |> plotly::add_trace(type="scatter",mode="lines",x=c(s$xint,s$t_0,s$t_0,s$xint),y=c(0,0,s$y_0,0),
+                                  fill="toself",fillcolor="rgba(0,0,0,0.15)",line=list(color="black",width=1),
+                                  name="Angle",hoverinfo="skip")
+      }
+      p |>
+        plotly::add_markers(x=s$t_0,y=s$y_0,marker=list(color="red",size=12,line=list(color="black",width=1)),
+                            name="Start",hovertemplate=paste(hat0,": %{x:.4f}<br>LogLikelihood: %{y:.4f}<extra></extra>",sep="")) |>
+        plotly::add_markers(x=s$t_1,y=s$y_1,marker=list(color="green",size=12,line=list(color="black",width=1)),
+                            name="Next",hovertemplate=paste(hat1,": %{x:.4f}<br>LogLikelihood: %{y:.4f}<extra></extra>",sep="")) |>
+        plotly::layout(showlegend=FALSE,
+                       xaxis=list(title="θ",range=c(-6,6),zeroline=FALSE),
+                       yaxis=list(title="LogLikelihood",range=c(-15,1),zeroline=FALSE),
+                       shapes=list(list(type="line",x0=0,x1=1,xref="paper",y0=0,y1=0,line=list(color="gray",width=1)),
+                                   vline(s$t_0,"gray","dot"),
+                                   vline(s$t_1,"gray","dot")),
+                       annotations=list(list(x=s$t_0,y=s$y_0-1,text=hat0,showarrow=FALSE),
+                                        list(x=s$t_1,y=s$y_1-1,text=hat1,showarrow=FALSE)))
+    })
+    output$iterinfo<-renderText({
+      s<-nr_plid()$step
+      paste(sep="","Newton-Raphson step:","\n","theta1=theta0-(LL' / LL'')","\n",round(s$t_1,4),"=",round(s$t_0,4),"-","(",round(s$d1,4)," / ",round(s$d2,4),")","\n","\n","Acute angle with abscissa=",round(s$deg,digits=0)," degrees")
     })
     ##########################################################################################
     # EAP MAP PERSON ABILITY ESTIMATION IN RACH MODEL
@@ -654,51 +635,77 @@ mleirt<-function(){
     LXr<-matrix(NA,N,1)
     for(j in 1:N){ LXr[j]<-prod(pji[j,]) }
     LXr})
-    output$Prior_plot<-renderPlot({ Xr<-Xr()
-    AXr<-AXr()
-    graphics::plot(Xr,AXr,type='l',xlab=expression(X[r]),ylab=expression(A(X[r])),xlim=c(-6,6),main=expression(paste("Prior Distribution of ",theta)))
-    inc<-(abs(Xr[2]-Xr[1])/2)
-    for(i in 1:length(Xr)){ polygon(x=c(Xr[i]-inc,Xr[i]+inc,Xr[i]+inc,Xr[i]-inc) ,y=c(0,0,AXr[i],AXr[i]),density=c(30)) }})
-    output$TraceLines_plot<-renderPlot({Xr<-Xr()
-    pji<-pji()
-    patt<-pattInput()
-    graphics::plot(NULL,xlim=c(-3,3),ylim=c(0,1),xlab=expression(X[r]),ylab=expression(P(X[r])),main=expression(paste("Item Tracelines")))
-    for(i in 1:n_eapmappae){
-      lines(Xr,pji[,i],type='l',col=2+patt[i]*2)
-    }
-    legend(legend=c(1,0),col=c(4,2),lty=1,title="Response","right")
-    })
-    output$Likelihood_plot<-renderPlot({
-      Xr<-Xr()
-      LXr<-LXr()
-      graphics::plot(Xr,LXr,type='l',xlab=expression(X[r]),ylab=expression(L(X[r])),xlim=c(-3,3),main=expression(paste("Likelihood")))
-    })
-    output$Posterior_plot<-renderPlot({
+    output$Prior_plot<-plotly::renderPlotly({
       Xr<-Xr()
       AXr<-AXr()
+      plotly::plot_ly() |>
+        plotly::add_bars(x=Xr,y=AXr,width=abs(Xr[2]-Xr[1]),
+                         marker=list(color="rgba(0,0,0,0.12)",line=list(color="black",width=1)),
+                         hovertemplate="X<sub>r</sub>: %{x:.3f}<br>A(X<sub>r</sub>): %{y:.4f}<extra></extra>") |>
+        plotly::add_lines(x=Xr,y=AXr,line=list(color="black"),hoverinfo="skip") |>
+        plotly::layout(title="Prior Distribution of θ",showlegend=FALSE,bargap=0,
+                       xaxis=list(title="X<sub>r</sub>",range=c(-6,6)),
+                       yaxis=list(title="A(X<sub>r</sub>)"))
+    })
+    output$TraceLines_plot<-plotly::renderPlotly({
+      Xr<-Xr()
+      pji<-pji()
+      patt<-pattInput()
+      p<-plotly::plot_ly()
+      for(i in 1:n_eapmappae){
+        response<-as.character(patt[i])
+        p<-p |> plotly::add_lines(x=Xr,y=pji[,i],line=list(color=c("#DF536B","#2297E6")[patt[i]+1]),
+                                  name=response,legendgroup=response,showlegend=!(patt[i] %in% patt[seq_len(i-1)]),
+                                  hovertemplate=paste("Item ",i,"<br>X<sub>r</sub>: %{x:.3f}<br>P(X<sub>r</sub>): %{y:.4f}<extra></extra>",sep=""))
+      }
+      p |> plotly::layout(title="Item Tracelines",legend=list(title=list(text="Response")),
+                          xaxis=list(title="X<sub>r</sub>",range=c(-3,3)),
+                          yaxis=list(title="P(X<sub>r</sub>)",range=c(0,1)))
+    })
+    output$Likelihood_plot<-plotly::renderPlotly({
+      Xr<-Xr()
       LXr<-LXr()
-      graphics::plot(Xr,AXr*LXr,type='l',xlab=expression(X[r]),ylab=expression(paste(A(X[r])," * ",L(X[r]))),xlim=c(-2.5,2.5),main=expression(paste("Posterior Distribution of ",theta)))
+      plotly::plot_ly() |>
+        plotly::add_lines(x=Xr,y=as.vector(LXr),line=list(color="black"),
+                          hovertemplate="X<sub>r</sub>: %{x:.3f}<br>L(X<sub>r</sub>): %{y:.5f}<extra></extra>") |>
+        plotly::layout(title="Likelihood",showlegend=FALSE,
+                       xaxis=list(title="X<sub>r</sub>",range=c(-3,3)),
+                       yaxis=list(title="L(X<sub>r</sub>)"))
+    })
+    output$Posterior_plot<-plotly::renderPlotly({
+      Xr<-Xr()
+      AXr<-AXr()
+      LXr<-as.vector(LXr())
       EAP<-sum(Xr*AXr*LXr)/sum(AXr*LXr)
       PSD<-sqrt(sum((Xr-EAP)^2*LXr*AXr)/sum(LXr*AXr))
       MAP<-Xr[which.max(AXr*LXr)] #now it makes sense why it is iterative
-      abline(v=EAP,col=4)
-      abline(v=MAP,col=2)
-      text(-1.8,max(AXr*LXr)*.9,paste('EAP =',round(EAP,4)),col=4)
-      text(1.8,max(AXr*LXr)*.9,paste('MAP =',round(MAP,4)),col=2)
+      plotly::plot_ly() |>
+        plotly::add_lines(x=Xr,y=AXr*LXr,line=list(color="black"),
+                          hovertemplate="X<sub>r</sub>: %{x:.3f}<br>A(X<sub>r</sub>) * L(X<sub>r</sub>): %{y:.6f}<extra></extra>") |>
+        plotly::layout(title="Posterior Distribution of θ",showlegend=FALSE,
+                       xaxis=list(title="X<sub>r</sub>",range=c(-2.5,2.5)),
+                       yaxis=list(title="A(X<sub>r</sub>) * L(X<sub>r</sub>)"),
+                       shapes=list(vline(EAP,"#2297E6"),vline(MAP,"#DF536B")),
+                       annotations=list(list(x=-1.8,y=max(AXr*LXr)*.9,text=paste('EAP =',round(EAP,4)),showarrow=FALSE,font=list(color="#2297E6")),
+                                        list(x=1.8,y=max(AXr*LXr)*.9,text=paste('MAP =',round(MAP,4)),showarrow=FALSE,font=list(color="#DF536B"))))
     })
-    output$Combined_plot<-renderPlot({
+    output$Combined_plot<-plotly::renderPlotly({
       Xr<-Xr()
       AXr<-AXr()
-      LXr<-LXr()
-      graphics::plot(Xr,5*AXr*LXr,type='l',xlab=expression(X[r]),ylab=expression(f(X[r])),ylim=c(0,0.20),xlim=c(-4,4),main=expression(paste("Prior,Likelihood,and Posterior Distributions")),sub=expression(paste("Note: Posterior distribution is rescaled for comperability!")))
-      lines(Xr,LXr,type='l',col="blue")
-      lines(Xr,AXr,type='l',col="red")
+      LXr<-as.vector(LXr())
       EAP<-sum(Xr*AXr*LXr)/sum(AXr*LXr)
-      text(-3.5,0.2,paste('Posterior Mean =',round(EAP,2)),col="black")
-      text(3.5,0.2,paste('Prior Mean =',input$mean_eapmappae),col="red")
-      abline(v=input$mean_eapmappae,col="red",lty=2)
-      abline(v=EAP,col="black",lty=2)
-      legend(legend=c("Prior","Likelihood","Posterior"),col=c("red","blue","black"),lty=1,title="Distribution","right")})
+      plotly::plot_ly() |>
+        plotly::add_lines(x=Xr,y=AXr,line=list(color="red"),name="Prior") |>
+        plotly::add_lines(x=Xr,y=LXr,line=list(color="blue"),name="Likelihood") |>
+        plotly::add_lines(x=Xr,y=5*AXr*LXr,line=list(color="black"),name="Posterior") |>
+        plotly::layout(title="Prior, Likelihood, and Posterior Distributions<br><sup>Note: Posterior distribution is rescaled for comparability!</sup>",
+                       legend=list(title=list(text="Distribution")),
+                       xaxis=list(title="X<sub>r</sub>",range=c(-4,4)),
+                       yaxis=list(title="f(X<sub>r</sub>)",range=c(0,0.20)),
+                       shapes=list(vline(input$mean_eapmappae,"red","dash"),vline(EAP,"black","dash")),
+                       annotations=list(list(x=-3.5,y=0.2,yanchor="top",text=paste('Posterior Mean =',round(EAP,2)),showarrow=FALSE,font=list(color="black")),
+                                        list(x=3.5,y=0.2,yanchor="top",text=paste('Prior Mean =',input$mean_eapmappae),showarrow=FALSE,font=list(color="red"))))
+    })
   }
   shiny::shinyApp(ui=ui,server=server)
 }

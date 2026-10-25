@@ -6,7 +6,8 @@ Author: Dimitrios Zacharatos [aut,cre]
  		Metin Bulus [aut,cre]
 		Wes Bonifay [aut,cre]
 Maintainer: Dimitrios Zacharatos <dzacharatos@yahoo.com>
-Depends: shiny
+Depends: R (>= 4.1.0), shiny
+Imports: plotly
 Description: IRT curves with shinyapps.
 License: GPL-3
 URL: https://sedzinfo.github.io/mleirt/, https://github.com/sedzinfo/mleirt
