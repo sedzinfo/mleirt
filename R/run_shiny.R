@@ -121,9 +121,6 @@
 #' @examples
 #' if (interactive()) mleirt()
 mleirt<-function(){
-  library(shiny)
-  library(shinydashboard)
-  library(htmltools)
   ##########################################################################################
   # MLE ITEM DISCRIMINATION DIFFICULTY 2PL MODEL
   ##########################################################################################
@@ -264,7 +261,7 @@ mleirt<-function(){
     datamtx_idd2pl<-reactive({
       pcorrmtx_idd2pl<-pcorrmtx_idd2pl()
       datamtx_idd2pl<-matrix(NA,nrow=N_idd2pl,ncol=1)
-      for(j in 1:N_idd2pl){ datamtx_idd2pl[j]<-rbinom(1,1,pcorrmtx_idd2pl[j]) }
+      for(j in 1:N_idd2pl){ datamtx_idd2pl[j]<-stats::rbinom(1,1,pcorrmtx_idd2pl[j]) }
       datamtx_idd2pl
     })
     logLike_idd2pl<-reactive({
@@ -320,7 +317,7 @@ mleirt<-function(){
       pcorrmtx_igdd3pl<-pcorrmtx_igdd3pl()
       datamtx_igdd3pl<-matrix(NA,nrow=N_igdd3pl,ncol=1)
       for(j in 1:N_igdd3pl){
-        datamtx_igdd3pl[j]<-rbinom(1,1,pcorrmtx_igdd3pl[j])
+        datamtx_igdd3pl[j]<-stats::rbinom(1,1,pcorrmtx_igdd3pl[j])
       }
       datamtx_igdd3pl})
     logLike1<-reactive({
@@ -561,19 +558,19 @@ mleirt<-function(){
       }
       t<-logLike_plid[,1]
       ll<-logLike_plid[,2]
-      spline<-smooth.spline(ll ~ t)
+      spline<-stats::smooth.spline(ll ~ t)
       t_0<-input$t_0_plid
       # only the last iteration is shown, as in the original plot
       for(i in 1:input$iter_plid){
-        fderiv0<-predict(spline,x=t_0,deriv=0)
-        fderiv1<-predict(spline,x=t_0,deriv=1)
-        fderiv2<-predict(spline,x=t_0,deriv=2)
+        fderiv0<-stats::predict(spline,x=t_0,deriv=0)
+        fderiv1<-stats::predict(spline,x=t_0,deriv=1)
+        fderiv2<-stats::predict(spline,x=t_0,deriv=2)
         t_1<-t_0-(fderiv1$y/fderiv2$y)
         yint<-fderiv0$y-(fderiv1$y*t_0)
         xint<--yint/fderiv1$y
         rad<-atan(fderiv0$y/(xint-t_0))
         deg<-rad*180/pi
-        y_1<-predict(spline,x=t_1,deriv=0)
+        y_1<-stats::predict(spline,x=t_1,deriv=0)
         step<-list(t_0=t_0,t_1=t_1,y_0=fderiv0$y,y_1=y_1$y,d1=fderiv1$y,d2=fderiv2$y,yint=yint,xint=xint,deg=deg)
         t_0<-t_1
       }
@@ -582,11 +579,11 @@ mleirt<-function(){
     output$MLEIRT_plot<-plotly::renderPlotly({
       nr<-nr_plid()
       s<-nr$step
-      hat0<-"θ̂<sup>0</sup>"
-      hat1<-"θ̂<sup>1</sup>"
+      hat0<-"\u03b8\u0302<sup>0</sup>"
+      hat1<-"\u03b8\u0302<sup>1</sup>"
       p<-plotly::plot_ly() |>
         plotly::add_lines(x=nr$t,y=nr$ll,line=list(color="black"),name="Log-likelihood",
-                          hovertemplate="θ: %{x:.3f}<br>LogLikelihood: %{y:.4f}<extra></extra>") |>
+                          hovertemplate="\u03b8: %{x:.3f}<br>LogLikelihood: %{y:.4f}<extra></extra>") |>
         plotly::add_lines(x=c(-6,6),y=s$yint+s$d1*c(-6,6),line=list(color="blue"),name="Tangent",hoverinfo="skip")
       if(round(abs(s$deg),digits=0)>0){
         p<-p |> plotly::add_trace(type="scatter",mode="lines",x=c(s$xint,s$t_0,s$t_0,s$xint),y=c(0,0,s$y_0,0),
@@ -599,7 +596,7 @@ mleirt<-function(){
         plotly::add_markers(x=s$t_1,y=s$y_1,marker=list(color="green",size=12,line=list(color="black",width=1)),
                             name="Next",hovertemplate=paste(hat1,": %{x:.4f}<br>LogLikelihood: %{y:.4f}<extra></extra>",sep="")) |>
         plotly::layout(showlegend=FALSE,
-                       xaxis=list(title="θ",range=c(-6,6),zeroline=FALSE),
+                       xaxis=list(title="\u03b8",range=c(-6,6),zeroline=FALSE),
                        yaxis=list(title="LogLikelihood",range=c(-15,1),zeroline=FALSE),
                        shapes=list(list(type="line",x0=0,x1=1,xref="paper",y0=0,y1=0,line=list(color="gray",width=1)),
                                    vline(s$t_0,"gray","dot"),
@@ -643,7 +640,7 @@ mleirt<-function(){
                          marker=list(color="rgba(0,0,0,0.12)",line=list(color="black",width=1)),
                          hovertemplate="X<sub>r</sub>: %{x:.3f}<br>A(X<sub>r</sub>): %{y:.4f}<extra></extra>") |>
         plotly::add_lines(x=Xr,y=AXr,line=list(color="black"),hoverinfo="skip") |>
-        plotly::layout(title="Prior Distribution of θ",showlegend=FALSE,bargap=0,
+        plotly::layout(title="Prior Distribution of \u03b8",showlegend=FALSE,bargap=0,
                        xaxis=list(title="X<sub>r</sub>",range=c(-6,6)),
                        yaxis=list(title="A(X<sub>r</sub>)"))
     })
@@ -682,7 +679,7 @@ mleirt<-function(){
       plotly::plot_ly() |>
         plotly::add_lines(x=Xr,y=AXr*LXr,line=list(color="black"),
                           hovertemplate="X<sub>r</sub>: %{x:.3f}<br>A(X<sub>r</sub>) * L(X<sub>r</sub>): %{y:.6f}<extra></extra>") |>
-        plotly::layout(title="Posterior Distribution of θ",showlegend=FALSE,
+        plotly::layout(title="Posterior Distribution of \u03b8",showlegend=FALSE,
                        xaxis=list(title="X<sub>r</sub>",range=c(-2.5,2.5)),
                        yaxis=list(title="A(X<sub>r</sub>) * L(X<sub>r</sub>)"),
                        shapes=list(vline(EAP,"#2297E6"),vline(MAP,"#DF536B")),
